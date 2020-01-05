@@ -6,58 +6,56 @@ using UnityStandardAssets.Characters.ThirdPerson;
 using Unity.Jobs;
 using System.Threading;
 
-public struct Env : IJob
+public class Env
 {
-    public TurnBasedEnvironment env;
-
-
-    public void Execute()
+    public MazeGenerator mazeRef;
+    public Env(MazeGenerator maze) : base()
     {
-        env = new TurnBasedEnvironment(0, 100);
-        for (int i = 0; i < 5; i++)
-        {
-            var explorerAgent = new Actor();
-            env.Add(explorerAgent, "A" + i);
-            
-        }
-        Debug.Log("Starting environment.");
-        env.Start();
+        mazeRef = maze;
     }
-}
-
-public class EnvThread
-{
-    public TurnBasedEnvironment env = new TurnBasedEnvironment(0, 100);
+    public TurnBasedEnvironment env = new TurnBasedEnvironment(0, 10);
     public void envstart()
     {
+        int finished = 0;
+        System.Random rand = new System.Random();
+        List<string> history = new List<string> { };
         for (int i = 0; i < 5; i++)
         {
-            var explorerAgent = new Actor();
+            int line = rand.Next(mazeRef.mazeRows);
+            int col = rand.Next(mazeRef.mazeCols);
+
+            var explorerAgent = new Actor(mazeRef.mazeCells,line,col, finished, history);
+
             env.Add(explorerAgent, "A" + i);
 
         }
         Debug.Log("Starting environment.");
         env.Start();
+        Debug.Log("History - " + history.Count);
     }
+  
 }
 public class CharacterGenerator : MonoBehaviour
 {
+    public MazeGenerator maze;
+
     public List<GameObject> avatars;
 
     public GameObject model;
 
+    private Thread thr;
+
+
     // Start is called before the first frame update
     void Start()
     {
-        //Env env = new Env();
 
         // Creating object of ExThread class 
-        EnvThread obj = new EnvThread();
+        Env obj = new Env(maze);
 
         // Creating thread 
         // Using thread class 
-        Thread thr = new Thread(new ThreadStart(obj.envstart));
-        thr.Start();
+        obj.envstart();
         for (int i = 0; i < 1   ; i++)
         {
 
